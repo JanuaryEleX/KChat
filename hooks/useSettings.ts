@@ -9,11 +9,11 @@ const defaultSettings: Settings = {
   language: 'en',
   apiKey: [],
   showSuggestions: false,
-  defaultModel: 'gemini-1.0-pro', // 默认模型可以根据需要调整
-  suggestionModel: 'gemini-1.0-pro',
+  defaultModel: 'gemini-2.5-pro', // 默认模型可以根据需要调整
+  suggestionModel: 'gemini-2.5-flash-lite',
   autoTitleGeneration: true,
-  titleGenerationModel: 'gemini-1.0-pro',
-  languageDetectionModel: 'gemini-1.0-pro',
+  titleGenerationModel: 'gemini-2.5-flash-lite',
+  languageDetectionModel: 'gemini-2.5-flash-lite',
   defaultSearch: false,
   useSearchOptimizerPrompt: false,
   showThoughts: true,
