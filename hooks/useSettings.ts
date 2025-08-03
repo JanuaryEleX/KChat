@@ -38,7 +38,7 @@ export const useSettings = () => {
     }
 
     // Override API Base URL if set in environment variables
-    if (process.env.API_BASE_URL) {
+    if (import.meta.env.VITE_API_BASE_URL) {
       initialSettings.apiBaseUrl = process.env.API_BASE_URL;
     }
 
@@ -55,7 +55,7 @@ export const useSettings = () => {
   }, [settings, isStorageLoaded, setLanguage]);
 
   useEffect(() => {
-    const apiKeys = settings.apiKey || (process.env.API_KEY ? [process.env.API_KEY] : []);
+    const apiKeys = settings.apiKey.length > 0 ? settings.apiKey : (import.meta.env.VITE_API_KEY ? [import.meta.env.VITE_API_KEY] : []);
     if (isStorageLoaded && apiKeys.length > 0) {
       getAvailableModels(apiKeys, settings.apiBaseUrl).then(models => {
         if (!models || models.length === 0) return;
