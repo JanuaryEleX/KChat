@@ -41,6 +41,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
   const toolsWrapperRef = useRef<HTMLDivElement>(null);
   const toolsButtonRef = useRef<HTMLButtonElement>(null);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isStudyModeActive = chatSession ? !!chatSession.isStudyMode : isNextChatStudyMode;
 
@@ -102,22 +103,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
         handleSubmit(e as any);
     }
   }
-  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const items = e.clipboardData.items;
-    const pastedFiles: File[] = [];
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].kind === 'file') {
-        const file = items[i].getAsFile();
-        if (file) {
-          pastedFiles.push(file);
-        }
-      }
-    }
-    if (pastedFiles.length > 0) {
-      e.preventDefault();
-      addFiles(pastedFiles);
-    }
-  };
   
   const handleToolChange = (tool: string, value: boolean) => {
       const newConfig = {...toolConfig, [tool]: value};
@@ -126,8 +111,33 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
       onToolConfigChange(newConfig);
   }
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+      e.preventDefault();
+      addFiles(Array.from(e.clipboardData.files));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      addFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="p-2 pt-0 flex flex-col relative">
+    <form onSubmit={handleSubmit} onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} className="p-2 pt-0 flex flex-col relative">
         <div ref={toolsWrapperRef} className={`tool-selector-options glass-pane ${isToolsOpen ? 'visible' : ''}`}>
             <ToolItem icon="code" label={t('codeExecution')} checked={toolConfig.codeExecution} onChange={e => handleToolChange('codeExecution', e.target.checked)} disabled={toolConfig.urlContext} />
             <ToolItem icon="search" label={t('googleSearch')} checked={toolConfig.googleSearch} onChange={e => handleToolChange('googleSearch', e.target.checked)} />
@@ -138,14 +148,14 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
                 <p className="text-xs text-[var(--text-color-secondary)] px-3 -mt-1">{t('studyLearnDesc')}</p>
             </div>
         </div>
-        <div className="glass-pane rounded-[var(--radius-2xl)] flex flex-col transition-all duration-300 focus-within:border-[var(--accent-color)] focus-within:ring-2 ring-[var(--accent-color)]">
+        <div className={`glass-pane rounded-[var(--radius-2xl)] flex flex-col transition-all duration-300 focus-within:border-[var(--accent-color)] focus-within:ring-2 ring-[var(--accent-color)] ${isDragging ? 'border-[var(--accent-color)] ring-2' : ''}`}>
           <FilePreview files={files} onRemoveFile={handleRemoveFile} />
           <ActiveToolIndicator toolConfig={toolConfig} isStudyMode={isStudyModeActive} t={t} />
           <div className="flex items-end p-2">
             <button ref={toolsButtonRef} type="button" onClick={() => setIsToolsOpen(p => !p)} className={`p-2 rounded-full flex-shrink-0 transition-colors ${isToolsOpen ? 'bg-[var(--accent-color)] text-white' : 'text-[var(--text-color-secondary)] hover:bg-black/10 dark:hover:bg-white/10'}`} aria-label={t('tools')}><Icon icon="tools" className="w-6 h-6" /></button>
             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-[var(--text-color-secondary)] hover:text-[var(--accent-color)] disabled:opacity-50 flex-shrink-0" aria-label="Attach files"><Icon icon="paperclip" className="w-6 h-6" /></button>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} multiple accept={getSupportedMimeTypes()} />
-            <textarea ref={textareaRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder={t('typeMessage')} rows={1} className="flex-grow bg-transparent focus:outline-none resize-none max-h-48 text-[var(--text-color)] px-2 py-2" />
+            <textarea ref={textareaRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} onPaste={handlePaste} placeholder={t('typeMessage')} rows={1} className="flex-grow bg-transparent focus:outline-none resize-none max-h-48 text-[var(--text-color)] px-2 py-2" />
             <button type={isLoading ? 'button' : 'submit'} onClick={isLoading ? onCancel : undefined} disabled={!isLoading && (!input.trim() && files.length === 0)} className={`w-10 h-10 flex-shrink-0 flex items-center justify-center text-white rounded-[var(--radius-2xl)] disabled:opacity-50 disabled:cursor-not-allowed transition-all ${isLoading ? 'bg-red-500 hover:bg-red-600' : 'bg-[var(--accent-color)] transition-transform hover:scale-105'}`} aria-label={isLoading ? 'Stop generation' : 'Send message'}>
                 {isLoading ? <Icon icon="stop" className="w-5 h-5" /> : <Icon icon="send" className="w-5 h-5" />}
             </button>
