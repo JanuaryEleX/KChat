@@ -102,6 +102,22 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
         handleSubmit(e as any);
     }
   }
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    const pastedFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file') {
+        const file = items[i].getAsFile();
+        if (file) {
+          pastedFiles.push(file);
+        }
+      }
+    }
+    if (pastedFiles.length > 0) {
+      e.preventDefault();
+      addFiles(pastedFiles);
+    }
+  };
   
   const handleToolChange = (tool: string, value: boolean) => {
       const newConfig = {...toolConfig, [tool]: value};
