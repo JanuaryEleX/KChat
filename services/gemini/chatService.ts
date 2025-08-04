@@ -40,7 +40,7 @@ export async function generateChatDetails(apiKeys: string[], prompt: string, mod
   try {
     const payload = {
       model: model,
-      contents: `Generate a short, concise title (max 5 words) and a single, relevant emoji for a conversation starting with this user prompt: "${prompt}"`,
+      contents: `Generate a short, concise title (max 5 words) and a single, relevant emoji for a conversation starting with this user prompt: "${prompt}". Please respond in Chinese.`,
       config: { 
         responseMimeType: "application/json",
         responseSchema: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, icon: { type: Type.STRING } } }
